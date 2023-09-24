@@ -11,9 +11,8 @@ function getSqlData(request_body, request_params) {
         try {
         client.connect((err) => {
             client.query(request_body, request_params, (err, res) => {
-              console.log(err ? err.stack : res.rows[0].message) // Hello World!
               if (res) {
-                resolve(res.rows[0].message);
+                resolve(res.rows);
               } else {
                 reject("error getting db data, check connection")
               }
@@ -34,7 +33,7 @@ const createThread = (req, res) => {
 
 const getThread = (req, res) => {
     console.log('getThread called');
-    getSqlData('SELECT $1::text as message', ['Hello world!'])
+    getSqlData('SELECT name FROM boards WHERE board_id=2', [])
         .then(response => {
             res.send(response);
         })
@@ -43,7 +42,7 @@ const getThread = (req, res) => {
         });
 };
 
-// SELECT name FROM boards WHERE board_id=2; result: testing2
+// SELECT name FROM boards WHERE board_id=2; result: testing2 // getSqlData('SELECT $1::text as message', ['Hello world!'])
 
 const reportThread = (req, res) => {
 
