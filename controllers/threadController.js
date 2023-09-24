@@ -1,7 +1,6 @@
 const { Client } = require('pg');
 
 function getSqlData(request_body, request_params) {
-
     const client = new Client({
         user: 'postgres',
         password: 'postgres',
@@ -13,7 +12,11 @@ function getSqlData(request_body, request_params) {
         client.connect((err) => {
             client.query(request_body, request_params, (err, res) => {
               console.log(err ? err.stack : res.rows[0].message) // Hello World!
-              resolve(res.rows[0].message);
+              if (res) {
+                resolve(res.rows[0].message);
+              } else {
+                reject("error getting db data, check connection")
+              }
               client.end()
             })
          })
