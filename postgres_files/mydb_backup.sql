@@ -60,7 +60,7 @@ ALTER SEQUENCE public.boards_board_id_seq OWNED BY public.boards.board_id;
 
 CREATE TABLE public.posts (
     post_id integer NOT NULL,
-    text character varying(60) NOT NULL,
+    text character varying(600) NOT NULL,
     thread_id integer NOT NULL,
     pwd_delete character varying(60) NOT NULL,
     create_date timestamp without time zone DEFAULT now(),
@@ -168,11 +168,12 @@ ALTER SEQUENCE public.reports_thread_report_thread_id_seq OWNED BY public.report
 
 CREATE TABLE public.threads (
     thread_id integer NOT NULL,
-    text character varying(60) NOT NULL,
+    text character varying(120) NOT NULL,
     board_id integer NOT NULL,
     pwd_delete character varying(60) NOT NULL,
     create_date timestamp without time zone DEFAULT now(),
-    is_deleted boolean DEFAULT false NOT NULL
+    is_deleted boolean DEFAULT false NOT NULL,
+    bumped_on timestamp without time zone DEFAULT now()
 );
 
 
@@ -240,6 +241,9 @@ ALTER TABLE ONLY public.threads ALTER COLUMN thread_id SET DEFAULT nextval('publ
 --
 
 COPY public.boards (board_id, name) FROM stdin;
+19	general
+20	social
+21	fcc_test
 \.
 
 
@@ -271,7 +275,9 @@ COPY public.reports_thread (report_thread_id, thread_id, create_date) FROM stdin
 -- Data for Name: threads; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.threads (thread_id, text, board_id, pwd_delete, create_date, is_deleted) FROM stdin;
+COPY public.threads (thread_id, text, board_id, pwd_delete, create_date, is_deleted, bumped_on) FROM stdin;
+53	fcc_test_Tue Sep 26 2023 12:21:06 GMT+0300 (Москва, стандартное время)	21	delete_me	2023-09-26 12:21:06.189203	f	2023-09-26 12:21:06.189203
+54	fcc_test_thread	21	delete_me	2023-09-26 12:21:21.49553	f	2023-09-26 12:21:21.49553
 \.
 
 
@@ -279,7 +285,7 @@ COPY public.threads (thread_id, text, board_id, pwd_delete, create_date, is_dele
 -- Name: boards_board_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.boards_board_id_seq', 1, false);
+SELECT pg_catalog.setval('public.boards_board_id_seq', 21, true);
 
 
 --
@@ -307,7 +313,7 @@ SELECT pg_catalog.setval('public.reports_thread_report_thread_id_seq', 1, false)
 -- Name: threads_thread_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.threads_thread_id_seq', 1, false);
+SELECT pg_catalog.setval('public.threads_thread_id_seq', 54, true);
 
 
 --
@@ -348,6 +354,14 @@ ALTER TABLE ONLY public.reports_thread
 
 ALTER TABLE ONLY public.threads
     ADD CONSTRAINT threads_pkey PRIMARY KEY (thread_id);
+
+
+--
+-- Name: boards unique_name; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.boards
+    ADD CONSTRAINT unique_name UNIQUE (name);
 
 
 --
