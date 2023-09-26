@@ -8,6 +8,8 @@ const apiRoutes         = require('./routes/api.js');
 const fccTestingRoutes  = require('./routes/fcctesting.js');
 const runner            = require('./test-runner');
 
+const { Client }        = require('pg');
+
 const app = express();
 
 app.use('/public', express.static(process.cwd() + '/public'));
@@ -46,9 +48,26 @@ app.use(function(req, res, next) {
     .send('Not Found');
 });
 
+function pgProbe() {
+  const client = new Client({
+    user: 'postgres',
+    password: 'postgres',
+    database: 'forum'
+});
+
+client.connect((err) => {
+  client.query('SELECT $1::text as message', ['# PgSQL connected succesfully at 5432, user postgres, db forum'], (err, res) => {
+    console.log(err ? err.stack : res.rows[0].message) // Hello World!
+    client.end()
+  })
+})
+
+}
+
 //Start our server and tests!
 const listener = app.listen(process.env.PORT || 80, function () {
-  console.log('Your app is listening on port ' + listener.address().port);
+  console.log('# Your app is listening on port ' + listener.address().port);
+  pgProbe();
   if(process.env.NODE_ENV==='test') {
     console.log('Running Tests...');
     setTimeout(function () {
