@@ -1,8 +1,11 @@
 'use strict';
 require('dotenv').config();
 const express     = require('express');
+const fs = require("fs");
 const bodyParser  = require('body-parser');
 const cors        = require('cors');
+
+const https = require("https");
 
 const apiRoutes         = require('./routes/api.js');
 const fccTestingRoutes  = require('./routes/fcctesting.js');
@@ -75,7 +78,30 @@ client.connect((err) => {
 
 }
 
+const options = {
+  key: fs.readFileSync("server.key"),
+  cert: fs.readFileSync("server.cert"),
+};
+
 //Start our server and tests!
+
+https.createServer(options, app).listen(3000, function (req, res) {
+  console.log('# Your app is listening on port 3000');
+  pgProbe();
+  if(process.env.NODE_ENV==='test') {
+    console.log('Running Tests...');
+    setTimeout(function () {
+      try {
+        runner.run();
+      } catch(e) {
+        console.log('Tests are not valid:');
+        console.error(e);
+      }
+    }, 1500);
+  }
+});
+
+/*
 const listener = app.listen(process.env.PORT || 80, function () {
   console.log('# Your app is listening on port ' + listener.address().port);
   pgProbe();
@@ -91,5 +117,7 @@ const listener = app.listen(process.env.PORT || 80, function () {
     }, 1500);
   }
 });
+
+*/
 
 module.exports = app; //for testing
