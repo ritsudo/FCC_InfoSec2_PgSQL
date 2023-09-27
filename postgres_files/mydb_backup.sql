@@ -16,6 +16,20 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- Name: tablefunc; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS tablefunc WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION tablefunc; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION tablefunc IS 'functions that manipulate whole tables, including crosstab';
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -64,7 +78,8 @@ CREATE TABLE public.posts (
     thread_id integer NOT NULL,
     pwd_delete character varying(60) NOT NULL,
     create_date timestamp without time zone DEFAULT now(),
-    is_deleted boolean DEFAULT false NOT NULL
+    is_deleted boolean DEFAULT false NOT NULL,
+    reported boolean DEFAULT false
 );
 
 
@@ -93,76 +108,6 @@ ALTER SEQUENCE public.posts_post_id_seq OWNED BY public.posts.post_id;
 
 
 --
--- Name: reports_post; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.reports_post (
-    report_post_id integer NOT NULL,
-    post_id integer NOT NULL,
-    create_date timestamp without time zone DEFAULT now()
-);
-
-
-ALTER TABLE public.reports_post OWNER TO postgres;
-
---
--- Name: reports_post_report_post_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.reports_post_report_post_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.reports_post_report_post_id_seq OWNER TO postgres;
-
---
--- Name: reports_post_report_post_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.reports_post_report_post_id_seq OWNED BY public.reports_post.report_post_id;
-
-
---
--- Name: reports_thread; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.reports_thread (
-    report_thread_id integer NOT NULL,
-    thread_id integer NOT NULL,
-    create_date timestamp without time zone DEFAULT now()
-);
-
-
-ALTER TABLE public.reports_thread OWNER TO postgres;
-
---
--- Name: reports_thread_report_thread_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.reports_thread_report_thread_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.reports_thread_report_thread_id_seq OWNER TO postgres;
-
---
--- Name: reports_thread_report_thread_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.reports_thread_report_thread_id_seq OWNED BY public.reports_thread.report_thread_id;
-
-
---
 -- Name: threads; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -173,7 +118,8 @@ CREATE TABLE public.threads (
     pwd_delete character varying(60) NOT NULL,
     create_date timestamp without time zone DEFAULT now(),
     is_deleted boolean DEFAULT false NOT NULL,
-    bumped_on timestamp without time zone DEFAULT now()
+    bumped_on timestamp without time zone DEFAULT now(),
+    reported boolean DEFAULT false
 );
 
 
@@ -216,20 +162,6 @@ ALTER TABLE ONLY public.posts ALTER COLUMN post_id SET DEFAULT nextval('public.p
 
 
 --
--- Name: reports_post report_post_id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.reports_post ALTER COLUMN report_post_id SET DEFAULT nextval('public.reports_post_report_post_id_seq'::regclass);
-
-
---
--- Name: reports_thread report_thread_id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.reports_thread ALTER COLUMN report_thread_id SET DEFAULT nextval('public.reports_thread_report_thread_id_seq'::regclass);
-
-
---
 -- Name: threads thread_id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -251,23 +183,7 @@ COPY public.boards (board_id, name) FROM stdin;
 -- Data for Name: posts; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.posts (post_id, text, thread_id, pwd_delete, create_date, is_deleted) FROM stdin;
-\.
-
-
---
--- Data for Name: reports_post; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.reports_post (report_post_id, post_id, create_date) FROM stdin;
-\.
-
-
---
--- Data for Name: reports_thread; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.reports_thread (report_thread_id, thread_id, create_date) FROM stdin;
+COPY public.posts (post_id, text, thread_id, pwd_delete, create_date, is_deleted, reported) FROM stdin;
 \.
 
 
@@ -275,9 +191,7 @@ COPY public.reports_thread (report_thread_id, thread_id, create_date) FROM stdin
 -- Data for Name: threads; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.threads (thread_id, text, board_id, pwd_delete, create_date, is_deleted, bumped_on) FROM stdin;
-53	fcc_test_Tue Sep 26 2023 12:21:06 GMT+0300 (Москва, стандартное время)	21	delete_me	2023-09-26 12:21:06.189203	f	2023-09-26 12:21:06.189203
-54	fcc_test_thread	21	delete_me	2023-09-26 12:21:21.49553	f	2023-09-26 12:21:21.49553
+COPY public.threads (thread_id, text, board_id, pwd_delete, create_date, is_deleted, bumped_on, reported) FROM stdin;
 \.
 
 
@@ -292,28 +206,14 @@ SELECT pg_catalog.setval('public.boards_board_id_seq', 21, true);
 -- Name: posts_post_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.posts_post_id_seq', 1, false);
-
-
---
--- Name: reports_post_report_post_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.reports_post_report_post_id_seq', 1, false);
-
-
---
--- Name: reports_thread_report_thread_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.reports_thread_report_thread_id_seq', 1, false);
+SELECT pg_catalog.setval('public.posts_post_id_seq', 90, true);
 
 
 --
 -- Name: threads_thread_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.threads_thread_id_seq', 54, true);
+SELECT pg_catalog.setval('public.threads_thread_id_seq', 169, true);
 
 
 --
@@ -330,22 +230,6 @@ ALTER TABLE ONLY public.boards
 
 ALTER TABLE ONLY public.posts
     ADD CONSTRAINT posts_pkey PRIMARY KEY (post_id);
-
-
---
--- Name: reports_post reports_post_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.reports_post
-    ADD CONSTRAINT reports_post_pkey PRIMARY KEY (report_post_id);
-
-
---
--- Name: reports_thread reports_thread_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.reports_thread
-    ADD CONSTRAINT reports_thread_pkey PRIMARY KEY (report_thread_id);
 
 
 --
@@ -370,22 +254,6 @@ ALTER TABLE ONLY public.boards
 
 ALTER TABLE ONLY public.posts
     ADD CONSTRAINT posts_thread_id_fkey FOREIGN KEY (thread_id) REFERENCES public.threads(thread_id);
-
-
---
--- Name: reports_post reports_post_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.reports_post
-    ADD CONSTRAINT reports_post_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(post_id);
-
-
---
--- Name: reports_thread reports_thread_thread_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.reports_thread
-    ADD CONSTRAINT reports_thread_thread_id_fkey FOREIGN KEY (thread_id) REFERENCES public.threads(thread_id);
 
 
 --
