@@ -76,7 +76,7 @@ const reportPost = (req, res) => {
         if (!response[0]) {
             res.send("post not found")
         } else {
-            getSqlData("UPDATE posts SET reported=true WHERE post_id=$1", [req.body.post_id])
+            getSqlData("UPDATE posts SET reported=true WHERE post_id=$1", [req.body.reply_id])
             .then(response => {
                 console.log(response);
                 res.send("reported")
@@ -97,6 +97,7 @@ const deletePost = (req, res) => {
             if (!response[0]) {
                 res.send("incorrect password")
             } else {
+                console.log("post marked as deleted");
                 getSqlData("UPDATE posts SET text='[deleted]' WHERE post_id=$1 AND pwd_delete=$2", [req.body.reply_id, req.body.delete_password])
                 .then(response => {
                     console.log(response);

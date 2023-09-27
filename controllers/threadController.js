@@ -117,7 +117,8 @@ const deleteThread = (req, res) => {
             } else {
                 getSqlData("DELETE FROM posts WHERE thread_id=$1", [req.body.thread_id])
                 .then(response => {
-                    console.log(response);
+//                    console.log(response);
+                    console.log("thread deleted");
                     getSqlData("DELETE FROM threads WHERE thread_id=$1 AND pwd_delete=$2", [req.body.thread_id, req.body.delete_password])
                     .then(response => {
                         console.log(response);

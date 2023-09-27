@@ -8,6 +8,8 @@ const apiRoutes         = require('./routes/api.js');
 const fccTestingRoutes  = require('./routes/fcctesting.js');
 const runner            = require('./test-runner');
 
+process.env.NODE_ENV = 'test';
+
 const helmet = require('helmet');
 const { Client }        = require('pg');
 
