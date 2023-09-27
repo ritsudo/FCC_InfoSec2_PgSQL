@@ -64,7 +64,23 @@ const getPost = (req, res) => {
 };
 
 const reportPost = (req, res) => {
+    console.log("# report post called")
+    console.log(req.body.reply_id);
 
+    getSqlData("SELECT post_id FROM posts WHERE post_id=$1", [req.body.reply_id])
+    .then(response => {
+        if (!response[0]) {
+            res.send("post not found")
+        } else {
+            getSqlData("UPDATE posts SET reported=true WHERE post_id=$1", [req.body.post_id])
+            .then(response => {
+                console.log(response);
+                res.send("reported")
+            })
+            .catch(error => {console.log(error)});
+        }
+    })
+    .catch(error => {console.log(error)});
 };
 
 const deletePost = (req, res) => {
@@ -75,7 +91,7 @@ const deletePost = (req, res) => {
     getSqlData("SELECT post_id FROM posts WHERE post_id=$1 AND pwd_delete=$2", [req.body.reply_id, req.body.delete_password])
         .then(response => {
             if (!response[0]) {
-                res.send("incorrect password or post not found")
+                res.send("incorrect password")
             } else {
                 getSqlData("DELETE FROM posts WHERE post_id=$1 AND pwd_delete=$2", [req.body.reply_id, req.body.delete_password])
                 .then(response => {

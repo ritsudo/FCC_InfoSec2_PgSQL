@@ -12,25 +12,6 @@ function getBoardIdPromise(board_name) {
     return myGetBoardIdPromise;
 }
 
-function getRepliesDigest(thread_id) {
-    getSqlData('SELECT * FROM posts WHERE thread_id=$1 ORDER BY create_date DESC LIMIT 3', [thread_id])
-    .then(postResponse => {
-        
-        resJsonPosts = [];
-
-        postResponse.forEach(function(respPost) {
-            resJsonPosts.push({
-                _id: respPost.post_id,
-                text: respPost.text,
-                created_on: respPost.create_date,
-            })
-        })
-        
-        resolve(resJsonPosts);
-    })
-    .catch(error => { console.log(error); reject(error); });
-}
-
 const createThread = (req, res) => {
     console.log(req.params.board);
     console.log(req.body.text);
@@ -65,18 +46,34 @@ const getThread = (req, res) => {
         if ( !response[0] ) {
             res.send('error: provided board not found')
         } else {
-            getSqlData('SELECT * FROM threads WHERE board_id=$1 ORDER BY bumped_on DESC LIMIT 10', [response[0].board_id])
-            .then(response => {
+            getSqlData("SELECT * FROM threads FULL JOIN (SELECT thread_id thr_post_id, array_agg(post_data order by thread_id) AS recent_posts FROM (SELECT thread_id, concat_ws('& ', post_id, post_text, post_created_on) AS post_data FROM threads LEFT JOIN LATERAL (SELECT post_id, text post_text, create_date post_created_on FROM posts WHERE posts.thread_id = threads.thread_id ORDER BY create_date DESC LIMIT 3) ON TRUE) GROUP BY thread_id) ON threads.thread_id = thr_post_id WHERE board_id=$1 ORDER BY bumped_on DESC LIMIT 10", [response[0].board_id])
+            .then(threadsResponse => {
+
                 resJson = [];
     
-                response.forEach(function(respThread) {
+                threadsResponse.forEach(function(respThread) {
+                    
+                    let replies = [];
+
+                    console.log(respThread.recent_posts);
+
+                    if ( respThread.recent_posts[0] != '') {
+                        respThread.recent_posts.forEach(function(reply) {
+                            replies.push({
+                                _id: reply.split('& ')[0],
+                                text: reply.split('& ')[1],
+                                created_on: reply.split('& ')[2]
+                            })
+                        })
+                    }
+
                     resJson.push({
                         _id: respThread.thread_id,
                         text: respThread.text,
                         created_on: respThread.create_date,
                         bumped_on: respThread.bumped_on,
-                        replies: [],
-                        replycount: 0
+                        replies: replies,
+                        replycount: replies.length
                     })
                 })
                 
