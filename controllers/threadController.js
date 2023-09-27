@@ -13,9 +13,9 @@ function getBoardIdPromise(board_name) {
 }
 
 const createThread = (req, res) => {
-    console.log(req.params.board);
-    console.log(req.body.text);
-    console.log(req.body.delete_password);
+//    console.log(req.params.board);
+//    console.log(req.body.text);
+//    console.log(req.body.delete_password);
 
     getBoardIdPromise(req.params.board)
     .then(response => {
@@ -39,13 +39,14 @@ const createThread = (req, res) => {
 
 
 const getThread = (req, res) => {
-    console.log('getThread called');
+//    console.log('getThread called');
 
     getBoardIdPromise(req.params.board)
     .then(response => {
         if ( !response[0] ) {
             res.send('error: provided board not found')
         } else {
+            //TODO ADD COUNT(*) as count, optimize query
             getSqlData("SELECT * FROM threads FULL JOIN (SELECT thread_id thr_post_id, array_agg(post_data order by thread_id) AS recent_posts FROM (SELECT thread_id, concat_ws('& ', post_id, post_text, post_created_on) AS post_data FROM threads LEFT JOIN LATERAL (SELECT post_id, text post_text, create_date post_created_on FROM posts WHERE posts.thread_id = threads.thread_id ORDER BY create_date DESC LIMIT 3) ON TRUE) GROUP BY thread_id) ON threads.thread_id = thr_post_id WHERE board_id=$1 ORDER BY bumped_on DESC LIMIT 10", [response[0].board_id])
             .then(threadsResponse => {
 
@@ -55,7 +56,7 @@ const getThread = (req, res) => {
                     
                     let replies = [];
 
-                    console.log(respThread.recent_posts);
+//                    console.log(respThread.recent_posts);
 
                     if ( respThread.recent_posts[0] != '') {
                         respThread.recent_posts.forEach(function(reply) {
@@ -86,7 +87,7 @@ const getThread = (req, res) => {
 };
 
 const reportThread = (req, res) => {
-    console.log(req.body.thread_id);
+ //   console.log(req.body.thread_id);
 
     getSqlData("SELECT thread_id FROM threads WHERE thread_id=$1", [req.body.thread_id])
     .then(response => {
@@ -106,8 +107,8 @@ const reportThread = (req, res) => {
 };
 
 const deleteThread = (req, res) => {
-    console.log(req.body.thread_id);
-    console.log(req.body.delete_password);
+//    console.log(req.body.thread_id);
+//    console.log(req.body.delete_password);
 
     getSqlData("SELECT thread_id FROM threads WHERE thread_id=$1 AND pwd_delete=$2", [req.body.thread_id, req.body.delete_password])
         .then(response => {

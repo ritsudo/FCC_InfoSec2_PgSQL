@@ -36,7 +36,16 @@ GROUP BY thread_id;
 SELECT * FROM threads FULL JOIN (SELECT thread_id thr_post_id, array_agg(post_data order by thread_id) AS recent_posts FROM (SELECT thread_id, concat_ws(', ', post_id, post_text, post_created_on) AS post_data FROM threads LEFT JOIN LATERAL (SELECT post_id, text post_text, create_date post_created_on FROM posts WHERE posts.thread_id = threads.thread_id ORDER BY create_date DESC LIMIT 3) ON TRUE) GROUP BY thread_id) ON threads.thread_id = thr_post_id WHERE thread_id=93;
 
 SELECT * FROM threads FULL JOIN (
-	SELECT thread_id thr_post_id, array_agg(post_data order by thread_id) AS recent_posts FROM (
-	SELECT thread_id, concat_ws(', ', post_id, post_text, post_created_on) AS post_data FROM threads LEFT JOIN LATERAL (
-	SELECT post_id, text post_text, create_date post_created_on FROM posts WHERE posts.thread_id = threads.thread_id ORDER BY create_date DESC LIMIT 3) ON TRUE) GROUP BY thread_id)
-ON threads.thread_id = thr_post_id WHERE thread_id=$1 ORDER BY bumped_on DESC LIMIT 10
+	SELECT thread_id thr_post_id, array_agg
+		(post_data order by thread_id) 
+		AS recent_posts FROM (
+	SELECT thread_id, concat_ws
+		(', ', post_id, post_text, post_created_on) 
+		AS post_data FROM threads LEFT JOIN LATERAL (
+	SELECT post_id, text post_text, create_date post_created_on 
+	FROM posts 
+	WHERE posts.thread_id = threads.thread_id 
+	ORDER BY create_date DESC LIMIT 3) ON TRUE) 
+	GROUP BY thread_id)
+ON threads.thread_id = thr_post_id 
+WHERE thread_id=$1 ORDER BY bumped_on DESC LIMIT 10
